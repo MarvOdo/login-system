@@ -79,30 +79,31 @@ public:
     {
         FileName = fn;
         ofstream database(fn);
-        database << "username,password,name,age,fav-color\n";
+        database << "username,password,salt,name,age,fav-color\n";
         database.close();
     }
 
     //take in information to register a user in database
     void Register()
     {
-        string user[5];
+        string user[6];
 
         cout << "\nUsername: ";
         getline(cin, user[0]);
         cout << "\nPassword: ";
         getline(cin, user[1]);
-        user[1] = Encryptor.SHA256(user[1]); //hash of password is stored, not plain password
+        user[2] = Encryptor.makeSalt(8); //generate random salt of length 8 for user, store it
+        user[1] = Encryptor.SHA256(user[1] + user[2]); //hash of password + salt is stored, not plain password
         cout << "\nName: ";
-        getline(cin, user[2]);
-        cout << "\nAge: ";
         getline(cin, user[3]);
-        cout << "\nFavorite Color: ";
+        cout << "\nAge: ";
         getline(cin, user[4]);
+        cout << "\nFavorite Color: ";
+        getline(cin, user[5]);
 
         fstream database;
         database.open(FileName, ios::app);
-        database << user[0] << "," << user[1] << "," << user[2] << "," << user[3] << "," << user[4] << "\n";
+        database << user[0] << "," << user[1] << "," << user[2] << "," << user[3] << "," << user[4] << "," << user[5] << "\n";
         database.close();
     }
 
@@ -115,16 +116,17 @@ public:
         getline(cin, credentials[0]);
         cout << "\nPassword: ";
         getline(cin, credentials[1]);
-        credentials[1] = Encryptor.SHA256(credentials[1]); //again, it's the hashes that are compared
 
-        string un, pw, name, age, fc, rest;
+        string un, pw, salt, name, age, fc, rest;
         fstream database;
         database.open(FileName, ios::in);
         while (getline(database, un, ',')) {
             if (un == credentials[0])
             {
-                getline(database, pw, ',');
-                if (pw == credentials[1])
+                getline(database, pw, ','); //password hash stored from registration
+                getline(database, salt, ','); //salt stored from registration
+                credentials[1] = Encryptor.SHA256(credentials[1] + salt); //hash of inputted password + salt
+                if (pw == credentials[1]) //compare hashes
                 {
                     cout << "Logged in successfully!\n\n";
                     getline(database, name, ',');

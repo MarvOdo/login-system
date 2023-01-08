@@ -139,4 +139,16 @@ public:
 
 		return digest;
 	}
+
+	string makeSalt(int length)
+	{
+		string salt;
+		srand(time(0));
+		for (int i = 0; i < length; i++)
+		{
+			char randomChar = (char) (rand() % 94 + 33);
+			salt = salt + randomChar;
+		}
+		return salt;
+	}
 };
